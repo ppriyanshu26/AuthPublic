@@ -1,1 +1,6 @@
 *.txt
+!requirements.txt
+
+App/build/
+App/app.spec
+App/dist/

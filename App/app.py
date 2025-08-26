@@ -319,15 +319,27 @@ def check_password(root, entry, error_label, otp_entries, lock_frame, decrypt_en
     global decrypt_key
     stored_password = get_stored_password()
     entered_hash = hashlib.sha256(entry.get().encode()).hexdigest()
+    
+    # Check if password matches
     if entered_hash == stored_password:
-        decrypt_key = decrypt_entry.get().strip()
+        key_input = decrypt_entry.get().strip()
+        
+        # Check if decryption key is empty
+        if len(key_input) < 8:
+            error_label.config(text="❌ Decryption key is too short.")
+            return
+        
+        decrypt_key = key_input
         lock_frame.destroy()
+        
         if not os.path.exists(ENCODED_FILE):
             build_github_credential_screen(root, otp_entries)
         else:
             otp_entries[:] = load_otps_from_decrypted(decode_encrypted_file())
             build_main_ui(root, otp_entries)
-    else: error_label.config(text="Incorrect password")
+    else:
+        error_label.config(text="❌ Incorrect password")
+
 
 def build_lock_screen(root, otp_entries):
     frame = tk.Frame(root, bg="#1e1e1e"); frame.pack(expand=True)
@@ -345,7 +357,7 @@ def build_lock_screen(root, otp_entries):
 # ------------------- Main -------------------
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("TOTP Authenticator")
+    root.title("TOTP Authenticator v1.0.0")
     root.geometry("420x500")
     root.configure(bg="#1e1e1e")
     root.resizable(False, False)
