@@ -168,7 +168,7 @@ def open_popup(func, title="Popup", size="400x300"):
     popup.title(title)
     popup.geometry(size)
     popup.configure(bg="#1e1e1e")
-    func(popup)  # call function with popup as parent
+    func(popup)
     return popup
 
 # ------------------- Password Management -------------------
@@ -176,6 +176,7 @@ def open_popup(func, title="Popup", size="400x300"):
 def reset_password(parent):
     frame = tk.Frame(parent, bg="#1e1e1e")
     frame.pack(expand=True, fill="both")
+    root.unbind_all("<Return>")
 
     def create_entry(label_text):
         tk.Label(frame, text=label_text, bg="#1e1e1e", fg="white").pack(pady=(10, 5))
@@ -204,13 +205,16 @@ def reset_password(parent):
             save_password(new_entry.get())
             parent.destroy()  # close popup after success
 
-    tk.Button(frame, text="Reset Password", command=perform_reset,
+    reset_btn = tk.Button(frame, text="Reset Password", command=perform_reset,
               font=("Segoe UI", 10), bg="#444", fg="white", relief="flat",
-              activebackground="#666").pack(pady=12)
+              activebackground="#666")
+    reset_btn.pack(pady=12)
+    bind_enter(root, reset_btn)
 
 def build_github_credential_screen(parent, otp_entries):
     frame = tk.Frame(parent, bg="#1e1e1e")
     frame.pack(expand=True, fill="both")
+    root.unbind_all("<Return>")
 
     tk.Label(frame, text="\U0001f517 Enter GitHub File URL", font=("Segoe UI", 14, "bold"),
              bg="#1e1e1e", fg="white").pack(pady=(30, 10))
@@ -254,6 +258,7 @@ def build_github_credential_screen(parent, otp_entries):
 def open_crypto_screen(parent):
     frame = tk.Frame(parent, bg="#1e1e1e")
     frame.pack(expand=True, fill="both")
+    root.unbind_all("<Return>")
 
     tk.Label(frame, text="🔒 Crypto Utility", font=("Segoe UI", 14, "bold"),
              bg="#1e1e1e", fg="white").pack(pady=(20, 10))
@@ -309,6 +314,7 @@ def build_main_ui(root, otp_entries):
 
     outer_frame = tk.Frame(root, bg="#1e1e1e")
     outer_frame.pack(fill="both", expand=True)
+    root.unbind_all("<Return>")
 
     canvas_frame = tk.Frame(outer_frame, bg="#1e1e1e")
     canvas_frame.pack(side="top", fill="both", expand=True)
@@ -400,6 +406,7 @@ def update_totps(root):
 def build_create_password_screen(root, otp_entries):
     frame = tk.Frame(root, bg="#1e1e1e")
     frame.pack(expand=True)
+    root.unbind_all("<Return>")
 
     tk.Label(frame, text="\U0001f510 Create a Password", font=("Segoe UI", 14, "bold"), bg="#1e1e1e", fg="white").pack(pady=(40, 10))
     pwd1 = tk.Entry(frame, show="*", font=("Segoe UI", 12), width=20, justify="center")
@@ -445,6 +452,7 @@ def check_password(root, entry, error_label, otp_entries, lock_frame, decrypt_en
 def build_lock_screen(root, otp_entries):
     frame = tk.Frame(root, bg="#1e1e1e")
     frame.pack(expand=True)
+    root.unbind_all("<Return>")
 
     tk.Label(frame, text="\U0001f512 Enter Password", font=("Segoe UI", 14, "bold"), bg="#1e1e1e", fg="white").pack(pady=(30, 10))
     entry = tk.Entry(frame, show="*", font=("Segoe UI", 12), width=20, justify="center")
