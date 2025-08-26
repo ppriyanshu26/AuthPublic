@@ -1,0 +1,6 @@
+cryptography
+qrcode
+opencv-python
+pyotp
+pyperclip
+requests
