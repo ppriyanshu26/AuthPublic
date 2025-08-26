@@ -233,10 +233,9 @@ def build_github_credential_screen(parent, otp_entries):
             decrypted_otps = decode_encrypted_file()
             otp_entries[:] = load_otps_from_decrypted(decrypted_otps)
             build_main_ui(root, otp_entries)
-            root.after(10, parent.destroy)
 
         except Exception as e:
-            error_label.config(text=f"Download failed: {str(e)}")
+            error_label.config(text=f"Download failed")
 
 
     tk.Button(frame, text="Save & Continue", font=("Segoe UI", 10),
