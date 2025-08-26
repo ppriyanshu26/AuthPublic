@@ -155,6 +155,12 @@ def download_github_file(url, token):
     else:
         raise Exception(f"Failed to fetch file: {response.status_code} - {response.text}")
 
+# ------------------- Safe Enter Key Handling -------------------
+
+def bind_enter(root, button):
+    root.unbind_all("<Return>")
+    root.bind_all("<Return>", lambda event: button.invoke())
+
 # ------------------- UI Popups -------------------
 
 def open_popup(func, title="Popup", size="400x300"):
@@ -178,6 +184,7 @@ def reset_password(parent):
         return entry
 
     current_entry = create_entry("Enter current password:")
+    current_entry.focus_set()
     new_entry = create_entry("New password:")
     confirm_entry = create_entry("Confirm new password:")
 
@@ -207,17 +214,22 @@ def build_github_credential_screen(parent, otp_entries):
 
     tk.Label(frame, text="\U0001f517 Enter GitHub File URL", font=("Segoe UI", 14, "bold"),
              bg="#1e1e1e", fg="white").pack(pady=(30, 10))
-    url_entry = tk.Entry(frame, font=("Segoe UI", 10), justify="center", width=40)
+    url_entry = tk.Entry(frame, font=("Segoe UI", 10), justify="center", width=40, show="*")
     url_entry.pack(pady=(0, 10))
     url_entry.focus()
 
     tk.Label(frame, text="GitHub Access Token", font=("Segoe UI", 10, "bold"),
              bg="#1e1e1e", fg="white").pack(pady=(20, 5))
-    token_entry = tk.Entry(frame, font=("Segoe UI", 10), justify="center")
+    token_entry = tk.Entry(frame, font=("Segoe UI", 10), justify="center", show="*")
     token_entry.pack(pady=(0, 10))
 
     error_label = tk.Label(frame, text="", fg="red", bg="#1e1e1e", font=("Segoe UI", 9))
     error_label.pack()
+
+    save_btn = tk.Button(frame, text="Save & Continue", font=("Segoe UI", 10),
+                         bg="#444", fg="white", relief="flat", activebackground="#666",
+                         command=lambda: save_url())
+    save_btn.pack(pady=20)
 
     def save_url():
         url = url_entry.get().strip()
@@ -233,14 +245,11 @@ def build_github_credential_screen(parent, otp_entries):
             decrypted_otps = decode_encrypted_file()
             otp_entries[:] = load_otps_from_decrypted(decrypted_otps)
             build_main_ui(root, otp_entries)
-
+            parent.destroy()
         except Exception as e:
-            error_label.config(text=f"Download failed")
+            error_label.config(text=f"Download failed: {str(e)}")
 
-
-    tk.Button(frame, text="Save & Continue", font=("Segoe UI", 10),
-              bg="#444", fg="white", relief="flat", activebackground="#666",
-              command=save_url).pack(pady=20)
+    bind_enter(root, save_btn)
 
 def open_crypto_screen(parent):
     frame = tk.Frame(parent, bg="#1e1e1e")
@@ -252,6 +261,7 @@ def open_crypto_screen(parent):
              bg="#1e1e1e", fg="white").pack(pady=(5, 2))
     input_entry = tk.Entry(frame, font=("Segoe UI", 12), width=40)
     input_entry.pack(pady=(0, 10))
+    input_entry.focus_set()
 
     tk.Label(frame, text="Result:", font=("Segoe UI", 10, "bold"),
              bg="#1e1e1e", fg="white").pack(pady=(5, 2))
@@ -410,9 +420,11 @@ def build_create_password_screen(root, otp_entries):
             frame.destroy()
             build_lock_screen(root, otp_entries)
 
-    tk.Button(frame, text="Save & Continue", font=("Segoe UI", 10),
-              bg="#444", fg="white", relief="flat", activebackground="#666",
-              command=submit_password).pack(pady=10)
+    submit_btn = tk.Button(frame, text="Save & Continue", font=("Segoe UI", 10),
+                           bg="#444", fg="white", relief="flat", activebackground="#666",
+                           command=submit_password)
+    submit_btn.pack(pady=10)
+    bind_enter(root, submit_btn)
 
 def check_password(root, entry, error_label, otp_entries, lock_frame, decrypt_entry):
     global decrypt_key
@@ -446,9 +458,11 @@ def build_lock_screen(root, otp_entries):
     error_label = tk.Label(frame, text="", fg="red", bg="#1e1e1e", font=("Segoe UI", 9))
     error_label.pack()
 
-    tk.Button(frame, text="Unlock", font=("Segoe UI", 10),
-              bg="#444", fg="white", relief="flat", activebackground="#666",
-              command=lambda: check_password(root, entry, error_label, otp_entries, frame, decrypt_entry)).pack(pady=10)
+    unlock_btn = tk.Button(frame, text="Unlock", font=("Segoe UI", 10),
+                           bg="#444", fg="white", relief="flat", activebackground="#666",
+                           command=lambda: check_password(root, entry, error_label, otp_entries, frame, decrypt_entry))
+    unlock_btn.pack(pady=10)
+    bind_enter(root, unlock_btn)
 
 # ------------------- Main -------------------
 
