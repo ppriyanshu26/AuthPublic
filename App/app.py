@@ -11,7 +11,10 @@ from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 import base64
 
-CACHE_FILE = "cache.txt"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CACHE_FILE = os.path.join(BASE_DIR, "cache.txt")
+ENCODED_FILE = os.path.join(BASE_DIR, "encoded.txt")
+
 frames = []
 toast_label = None
 canvas = None
@@ -117,7 +120,7 @@ def decode_encrypted_file() -> list:
     if not decrypt_key:
         return decrypted_otps
     try:
-        with open('encoded.txt', 'r') as infile:
+        with open(ENCODED_FILE, 'r') as infile:
             for line in infile:
                 if ',' not in line:
                     continue
@@ -147,7 +150,7 @@ def download_github_file(url, token):
     }
     response = requests.get(api_url, headers=headers)
     if response.status_code == 200:
-        with open("encoded.txt", "w", encoding="utf-8") as f:
+        with open(ENCODED_FILE, "w", encoding="utf-8") as f:
             f.write(response.text)
     else:
         raise Exception(f"Failed to fetch file: {response.status_code} - {response.text}")
@@ -229,9 +232,12 @@ def build_github_credential_screen(parent, otp_entries):
             download_github_file(url, token)
             decrypted_otps = decode_encrypted_file()
             otp_entries[:] = load_otps_from_decrypted(decrypted_otps)
-            parent.destroy()
+            build_main_ui(root, otp_entries)
+            root.after(10, parent.destroy)
+
         except Exception as e:
             error_label.config(text=f"Download failed: {str(e)}")
+
 
     tk.Button(frame, text="Save & Continue", font=("Segoe UI", 10),
               bg="#444", fg="white", relief="flat", activebackground="#666",
@@ -416,7 +422,7 @@ def check_password(root, entry, error_label, otp_entries, lock_frame, decrypt_en
     if entered_hash == stored_password:
         decrypt_key = decrypt_entry.get().strip()
         lock_frame.destroy()
-        if not os.path.exists("encoded.txt"):
+        if not os.path.exists(ENCODED_FILE):
             build_github_credential_screen(root, otp_entries)
         else:
             decrypted_otps = decode_encrypted_file()

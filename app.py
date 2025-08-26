@@ -229,7 +229,8 @@ def build_github_credential_screen(parent, otp_entries):
             download_github_file(url, token)
             decrypted_otps = decode_encrypted_file()
             otp_entries[:] = load_otps_from_decrypted(decrypted_otps)
-            parent.destroy()
+            build_main_ui(root, otp_entries)
+
         except Exception as e:
             error_label.config(text=f"Download failed: {str(e)}")
 
