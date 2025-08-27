@@ -135,7 +135,7 @@ def bind_enter(root, button):
     root.bind_all("<Return>", lambda event: button.invoke())
 
 # ------------------- Popups -------------------
-def open_popup(func, title="Popup", size="400x300"):
+def open_popup(func, title="Popup", size="370x300"):
     global popup_window
     if popup_window is not None and popup_window.winfo_exists():
         popup_window.lift()          
@@ -167,6 +167,7 @@ def open_popup(func, title="Popup", size="400x300"):
 
 # ------------------- Reset Password -------------------
 def reset_password(parent):
+    parent.resizable(False, False)
     frame = tk.Frame(parent, bg="#1e1e1e")
     frame.pack(expand=True, fill="both")
     root.unbind_all("<Return>")
@@ -205,6 +206,7 @@ def reset_password(parent):
 
 # ------------------- GitHub Credential -------------------
 def build_github_credential_screen(parent, otp_entries):
+    parent.resizable(False, False)
     frame = tk.Frame(parent, bg="#1e1e1e")
     frame.pack(expand=True, fill="both")
     root.unbind_all("<Return>")
@@ -237,35 +239,61 @@ def build_github_credential_screen(parent, otp_entries):
 
 # ------------------- Crypto -------------------
 def open_crypto_screen(parent):
+    parent.resizable(False, False)
     frame = tk.Frame(parent, bg="#1e1e1e")
     frame.pack(expand=True, fill="both")
     root.unbind_all("<Return>")
-    tk.Label(frame, text="🔒 Crypto Utility", font=("Segoe UI",14,"bold"), bg="#1e1e1e", fg="white").pack(pady=(20,10))
-    tk.Label(frame, text="Enter text:", font=("Segoe UI",10,"bold"), bg="#1e1e1e", fg="white").pack(pady=(5,2))
-    input_entry = tk.Entry(frame, font=("Segoe UI",12), width=25); input_entry.pack(pady=(0,10)); input_entry.focus_set()
-    tk.Label(frame, text="Result:", font=("Segoe UI",10,"bold"), bg="#1e1e1e", fg="white").pack(pady=(5,2))
+
+    tk.Label(frame, text="🔒 Crypto Utility", font=("Segoe UI",14,"bold"),
+             bg="#1e1e1e", fg="white").pack(pady=(20,10))
+
+    tk.Label(frame, text="Enter text:", font=("Segoe UI",10,"bold"),
+             bg="#1e1e1e", fg="white").pack(pady=(5,2))
+
+    input_entry = tk.Entry(frame, font=("Segoe UI",12), width=25)
+    input_entry.pack(pady=(0,10))
+    input_entry.focus_set()
+
+    tk.Label(frame, text="Result:", font=("Segoe UI",10,"bold"),
+             bg="#1e1e1e", fg="white").pack(pady=(5,2))
+
     output_var = tk.StringVar()
-    tk.Entry(frame, textvariable=output_var, font=("Segoe UI",12), width=25, state="readonly").pack(pady=(0,10))
-    error_label = tk.Label(frame, text="", fg="red", bg="#1e1e1e", font=("Segoe UI",9)); error_label.pack(pady=(0,5))
+    tk.Entry(frame, textvariable=output_var, font=("Segoe UI",12),
+             width=25, state="readonly").pack(pady=(0,10))
+
+    error_label = tk.Label(frame, text="", fg="red", bg="#1e1e1e", font=("Segoe UI",9))
+    error_label.pack(pady=(0,5))
 
     def encrypt_text():
         global decrypt_key
-        if not decrypt_key: error_label.config(text="Decryption key not set!"); return
-        try: output_var.set(encrypt_aes256(input_entry.get(), decrypt_key)); error_label.config(text="")
-        except Exception as e: error_label.config(text=f"Error: {str(e)}")
+        if not decrypt_key:
+            error_label.config(text="Decryption key not set!")
+            return
+        try:
+            output_var.set(encrypt_aes256(input_entry.get(), decrypt_key))
+            error_label.config(text="")
+        except Exception as e:
+            error_label.config(text=f"Error: {str(e)}")
 
     def decrypt_text():
         global decrypt_key
-        if not decrypt_key: error_label.config(text="Decryption key not set!"); return
-        try: output_var.set(decrypt_aes256(input_entry.get(), decrypt_key)); error_label.config(text="")
-        except Exception as e: error_label.config(text=f"Error: {str(e)}")
+        if not decrypt_key:
+            error_label.config(text="Decryption key not set!")
+            return
+        try:
+            output_var.set(decrypt_aes256(input_entry.get(), decrypt_key))
+            error_label.config(text="")
+        except Exception as e:
+            error_label.config(text=f"Error: {str(e)}")
 
-    tk.Button(frame, text="Encrypt", font=("Segoe UI",10), bg="#28db73", fg="white", relief="flat",
-              command=encrypt_text).pack(side="left", padx=20, pady=20, expand=True)
-    tk.Button(frame, text="Decrypt", font=("Segoe UI",10), bg="#ff4d4d", fg="white", relief="flat",
-              command=decrypt_text).pack(side="right", padx=20, pady=20, expand=True)
-    tk.Button(frame, text="Copy Result", font=("Segoe UI",10), bg="#444", fg="white", relief="flat",
-              command=lambda: copy_and_toast(output_var, parent)).pack(pady=(10,20))
+    tk.Button(frame, text="Encrypt", font=("Segoe UI",10), bg="#28db73", fg="white",
+              relief="flat", command=encrypt_text).pack(side="left", padx=20, pady=20, expand=True)
+
+    tk.Button(frame, text="Decrypt", font=("Segoe UI",10), bg="#ff4d4d", fg="white",
+              relief="flat", command=decrypt_text).pack(side="right", padx=20, pady=20, expand=True)
+
+    tk.Button(frame, text="Copy Result", font=("Segoe UI",10), bg="#444", fg="white",
+              relief="flat", command=lambda: copy_and_toast(output_var, parent)).pack(pady=(10,20))
 
 # ------------------- Main UI -------------------
 def build_main_ui(root, otp_entries):
@@ -303,7 +331,7 @@ def build_main_ui(root, otp_entries):
     tk.Button(footer, text="🗝 Token", font=("Segoe UI",10), bg="#2b2b2b", fg="white", relief="flat", height=2,
               command=lambda: open_popup(lambda p: build_github_credential_screen(p, otp_entries), title="GitHub Token")).pack(side="left", fill="x", expand=True)
     tk.Button(footer, text="⚙️ Crypto", font=("Segoe UI",10), bg="#2b2b2b", fg="white", relief="flat", height=2,
-              command=lambda: open_popup(open_crypto_screen, title="Crypto Utility", size="450x300")).pack(side="left", fill="x", expand=True)
+              command=lambda: open_popup(open_crypto_screen, title="Crypto Utility", size="370x300")).pack(side="left", fill="x", expand=True)
 
     if otp_entries: update_totps(root)
 
@@ -379,7 +407,7 @@ def build_lock_screen(root, otp_entries):
 # ------------------- Main -------------------
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("TOTP Authenticator v1.0.0")
+    root.title("TOTP Authenticator v1.1.0")
     root.geometry("420x500")
     root.configure(bg="#1e1e1e")
     root.resizable(False, False)
