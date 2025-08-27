@@ -22,6 +22,7 @@ toast_label = None
 canvas = None
 inner_frame = None
 decrypt_key = None
+popup_window = None
 
 # ------------------- Utility -------------------
 def load_otps_from_decrypted(decrypted_otps):
@@ -135,10 +136,32 @@ def bind_enter(root, button):
 
 # ------------------- Popups -------------------
 def open_popup(func, title="Popup", size="400x300"):
+    global popup_window
+    if popup_window is not None and popup_window.winfo_exists():
+        popup_window.lift()          
+        popup_window.focus_force()   
+        return popup_window
     popup = tk.Toplevel(root)
+    popup_window = popup
     popup.title(title)
     popup.geometry(size)
     popup.configure(bg="#1e1e1e")
+    popup.transient(root)
+    popup.grab_set()
+    root_x = root.winfo_x()
+    root_y = root.winfo_y()
+    root_w = root.winfo_width()
+    root_h = root.winfo_height()
+    win_w, win_h = map(int, size.split("x"))
+    x = root_x + (root_w // 2 - win_w // 2)
+    y = root_y + (root_h // 2 - win_h // 2)
+    popup.geometry(f"{win_w}x{win_h}+{x}+{y}")
+
+    def on_close():
+        global popup_window
+        popup_window = None
+        popup.destroy()
+    popup.protocol("WM_DELETE_WINDOW", on_close)
     func(popup)
     return popup
 
@@ -219,10 +242,10 @@ def open_crypto_screen(parent):
     root.unbind_all("<Return>")
     tk.Label(frame, text="🔒 Crypto Utility", font=("Segoe UI",14,"bold"), bg="#1e1e1e", fg="white").pack(pady=(20,10))
     tk.Label(frame, text="Enter text:", font=("Segoe UI",10,"bold"), bg="#1e1e1e", fg="white").pack(pady=(5,2))
-    input_entry = tk.Entry(frame, font=("Segoe UI",12), width=40); input_entry.pack(pady=(0,10)); input_entry.focus_set()
+    input_entry = tk.Entry(frame, font=("Segoe UI",12), width=25); input_entry.pack(pady=(0,10)); input_entry.focus_set()
     tk.Label(frame, text="Result:", font=("Segoe UI",10,"bold"), bg="#1e1e1e", fg="white").pack(pady=(5,2))
     output_var = tk.StringVar()
-    tk.Entry(frame, textvariable=output_var, font=("Segoe UI",12), width=40, state="readonly").pack(pady=(0,10))
+    tk.Entry(frame, textvariable=output_var, font=("Segoe UI",12), width=25, state="readonly").pack(pady=(0,10))
     error_label = tk.Label(frame, text="", fg="red", bg="#1e1e1e", font=("Segoe UI",9)); error_label.pack(pady=(0,5))
 
     def encrypt_text():
@@ -339,7 +362,6 @@ def check_password(root, entry, error_label, otp_entries, lock_frame, decrypt_en
             build_main_ui(root, otp_entries)
     else:
         error_label.config(text="❌ Incorrect password")
-
 
 def build_lock_screen(root, otp_entries):
     frame = tk.Frame(root, bg="#1e1e1e"); frame.pack(expand=True)
