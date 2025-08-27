@@ -4,3 +4,5 @@
 App/build/
 App/app.spec
 App/dist/
+
+*.png
