@@ -407,7 +407,7 @@ def build_lock_screen(root, otp_entries):
 # ------------------- Main -------------------
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("TOTP Authenticator v1.1.0")
+    root.title("TOTP Authenticator v1.1.1")
     root.geometry("420x500")
     root.configure(bg="#1e1e1e")
     root.resizable(False, False)
