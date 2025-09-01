@@ -1,7 +1,22 @@
+"""
+This script reads a QR code from an image, optionally encrypts the decoded data 
+using AES-256, and allows the user to save the encrypted result to a file for later use.
+
+Features:
+- Reads QR codes from images using OpenCV.
+- Validates user input (Y/N) for encryption and saving steps.
+- Derives a secure AES-256 key from a passphrase.
+- Encrypts the QR code data with a random IV for security.
+- Optionally stores the platform name and encrypted data into a text file.
+"""
+
+
 import cv2
+import re
 import base64
 import hashlib
 import os
+import sys
 from getpass import getpass
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
@@ -42,16 +57,48 @@ def read_qr_code_with_cv2(image_path):
             return decoded_data
         else:
             print("No QR code found in the image.")
+            sys.exit()
             
     except Exception as e:
         print(f"An error occurred: {e}")
 
 if __name__ == '__main__':
     # Replace 'qrcode.png' with the path to your QR code image file
-    data = read_qr_code_with_cv2('images\\Hostinger.png')
+    data = read_qr_code_with_cv2('qrcode.png')
+
+    while True:
+        answer = input("Encrypt data(Y|N): ").strip().upper()
+        if answer == "Y":
+            break
+        elif answer == "N":
+            print("\n✅ Decoded Data:", data)
+            sys.exit()
+            break
+        else:
+            print("\nOnly Y or N allowed. Please try again.")
+    
+    pattern = re.compile(r'issuer=(\w+)', re.I)
     secret_key = getpass("Enter the encryption key (hidden): ").strip()
+
     try:
-        encrypted_output = encrypt_aes256(data, secret_key)
-        print("\n✅ Encrypted Result:\n", encrypted_output)
+        platform = re.findall(pattern, data)[0]
+        data = encrypt_aes256(data, secret_key)
+        
+        while True:
+            answer = input("Add this platform to the app(Y|N): ").strip().upper()
+            if answer == "Y":
+                file_name = "encoded.txt"
+                with open(file_name, "a") as f:
+                    f.write(f"{platform}, {data}\n")
+                print("Entry added")
+                break
+            elif answer == "N":
+                print("\n✅ Encrypted Result:", data)
+                break
+            else:
+                print("\nOnly Y or N allowed. Please try again.")
+
     except Exception as e:
         print(f"❌ Encryption failed: {e}")
+    
+   
