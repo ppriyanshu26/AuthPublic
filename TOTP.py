@@ -1,3 +1,31 @@
+"""
+TOTP Authenticator v1.1.1
+-------------------------
+A secure desktop application (Tkinter-based) for managing Time-based One-Time Passwords (TOTPs).
+
+Features:
+    - AES-256 encryption/decryption for securely storing OTP secrets.
+    - GitHub integration for fetching encrypted OTP data from a private repository.
+    - Password-based application lock with SHA-256 hashing.
+    - OTP list UI with live countdown timers and clipboard copy support.
+    - Crypto utility for quick text encryption/decryption with the master key.
+    - Password reset functionality with validation.
+    - Encrypted local cache for authentication.
+
+Files:
+    - cache.txt   : Stores the hashed app password.
+    - encoded.txt : Stores encrypted OTP entries (platform, encrypted URL).
+
+Usage:
+    - On first run, prompts the user to create a password.
+    - On subsequent runs, requires password and decryption key to unlock.
+    - Allows importing encrypted OTPs from GitHub.
+    - Displays OTP codes in real time with automatic refresh.
+    - Provides options to lock, reset password, manage GitHub tokens, and use a crypto utility.
+
+Author: Priyanshu Priyam
+"""
+
 import tkinter as tk
 import pyotp
 import time
@@ -80,6 +108,11 @@ def save_password(password):
 
 def get_stored_password():
     return get_cache_value("APP_PASSWORD")
+
+def lock_app(root, otp_entries):
+    for widget in root.winfo_children():
+        widget.destroy()
+    build_lock_screen(root, otp_entries)
 
 # ------------------- Encryption -------------------
 def decrypt_aes256(ciphertext_b64, key_str):
@@ -298,42 +331,97 @@ def open_crypto_screen(parent):
 # ------------------- Main UI -------------------
 def build_main_ui(root, otp_entries):
     global canvas, inner_frame, frames
-    for widget in root.winfo_children(): widget.destroy()
-    outer_frame = tk.Frame(root, bg="#1e1e1e"); outer_frame.pack(fill="both", expand=True)
-    canvas_frame = tk.Frame(outer_frame, bg="#1e1e1e"); canvas_frame.pack(side="top", fill="both", expand=True)
+    for widget in root.winfo_children():
+        widget.destroy()
+
+    # ---- TOP FIXED BAR ----
+    top_bar = tk.Frame(root, bg="#1e1e1e")
+    top_bar.pack(side="top", fill="x")
+
+    lock_btn = tk.Button(top_bar, text="🔒 Lock App", font=("Segoe UI", 9, "bold"),
+                     bg="#444", fg="white", relief="flat", activebackground="#666",
+                     command=lambda: lock_app(root, otp_entries))
+    lock_btn.pack(pady=6)
+
+    # ---- MAIN CONTENT ----
+    outer_frame = tk.Frame(root, bg="#1e1e1e")
+    outer_frame.pack(fill="both", expand=True)
+
+    canvas_frame = tk.Frame(outer_frame, bg="#1e1e1e")
+    canvas_frame.pack(side="top", fill="both", expand=True)
+
     canvas = tk.Canvas(canvas_frame, bg="#1e1e1e", highlightthickness=0)
     scrollbar = tk.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
-    canvas.configure(yscrollcommand=scrollbar.set); scrollbar.pack(side="right", fill="y"); canvas.pack(side="left", fill="both", expand=True)
-    inner_frame = tk.Frame(canvas, bg="#1e1e1e"); canvas.create_window((0,0), window=inner_frame, anchor="nw")
+    canvas.configure(yscrollcommand=scrollbar.set)
+    scrollbar.pack(side="right", fill="y")
+    canvas.pack(side="left", fill="both", expand=True)
+
+    inner_frame = tk.Frame(canvas, bg="#1e1e1e")
+    canvas.create_window((0, 0), window=inner_frame, anchor="nw")
     inner_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-    canvas.bind("<Configure>", lambda e: canvas.itemconfig("all", width=e.width)); canvas.bind_all("<MouseWheel>", on_mousewheel)
+    canvas.bind("<Configure>", lambda e: canvas.itemconfig("all", width=e.width))
+    canvas.bind_all("<MouseWheel>", on_mousewheel)
+
     frames.clear()
 
+    # ---- OTP LIST ----
     if not otp_entries:
-        tk.Label(inner_frame, text="⚠️ No OTPs Loaded", font=("Segoe UI",11,"bold"), fg="red", bg="#1e1e1e").pack(pady=20)
+        tk.Label(inner_frame, text="⚠️ No OTPs Loaded", font=("Segoe UI", 11, "bold"),
+                 fg="red", bg="#1e1e1e").pack(pady=20)
     else:
         for display_name, uri in otp_entries:
             cleaned_uri, issuer, username = clean_uri(uri)
             totp_obj = pyotp.TOTP(pyotp.parse_uri(cleaned_uri).secret)
-            card = tk.Frame(inner_frame, bg="#2b2b2b", padx=12, pady=12); card.pack(fill="x", padx=12, pady=10)
-            tk.Label(card, text=display_name, font=("Segoe UI",12,"bold"), bg="#2b2b2b", fg="#ffffff", anchor="w").pack(fill="x")
-            tk.Label(card, text=username, font=("Segoe UI",9), fg="#aaaaaa", bg="#2b2b2b", anchor="w").pack(fill="x")
-            bottom = tk.Frame(card, bg="#2b2b2b"); bottom.pack(fill="x", pady=(8,0))
-            code_var = tk.StringVar(); tk.Label(bottom, textvariable=code_var, font=("Courier",16,"bold"), bg="#2b2b2b", fg="#00ffcc").pack(side="left")
-            time_var = tk.StringVar(); time_label = tk.Label(bottom, textvariable=time_var, font=("Segoe UI",10,"bold"), bg="#2b2b2b", fg="#00ffcc"); time_label.pack(side="left", padx=(10,0))
-            tk.Button(bottom, text="Copy", font=("Segoe UI",9), bg="#444", fg="white", activebackground="#666", relief="flat",
-                      command=lambda v=code_var: copy_and_toast(v, root)).pack(side="right")
-            frames.append({"totp": totp_obj, "code_var": code_var, "time_var": time_var, "time_label": time_label})
 
-    footer = tk.Frame(outer_frame, bg="#1e1e1e"); footer.pack(side="bottom", fill="x")
-    tk.Button(footer, text="🔄 Reset", font=("Segoe UI",10), bg="#2b2b2b", fg="white", relief="flat", height=2,
+            card = tk.Frame(inner_frame, bg="#2b2b2b", padx=12, pady=12)
+            card.pack(fill="x", padx=12, pady=10)
+
+            tk.Label(card, text=display_name, font=("Segoe UI", 12, "bold"),
+                     bg="#2b2b2b", fg="#ffffff", anchor="w").pack(fill="x")
+            tk.Label(card, text=username, font=("Segoe UI", 9),
+                     fg="#aaaaaa", bg="#2b2b2b", anchor="w").pack(fill="x")
+
+            bottom = tk.Frame(card, bg="#2b2b2b")
+            bottom.pack(fill="x", pady=(8, 0))
+
+            code_var = tk.StringVar()
+            tk.Label(bottom, textvariable=code_var, font=("Courier", 16, "bold"),
+                     bg="#2b2b2b", fg="#00ffcc").pack(side="left")
+
+            time_var = tk.StringVar()
+            time_label = tk.Label(bottom, textvariable=time_var, font=("Segoe UI", 10, "bold"),
+                                  bg="#2b2b2b", fg="#00ffcc")
+            time_label.pack(side="left", padx=(10, 0))
+
+            tk.Button(bottom, text="Copy", font=("Segoe UI", 9),
+                      bg="#444", fg="white", activebackground="#666", relief="flat",
+                      command=lambda v=code_var: copy_and_toast(v, root)).pack(side="right")
+
+            frames.append({
+                "totp": totp_obj,
+                "code_var": code_var,
+                "time_var": time_var,
+                "time_label": time_label
+            })
+
+    # ---- FOOTER ----
+    footer = tk.Frame(outer_frame, bg="#1e1e1e")
+    footer.pack(side="bottom", fill="x")
+
+    tk.Button(footer, text="🔄 Reset", font=("Segoe UI", 10),
+              bg="#2b2b2b", fg="white", relief="flat", height=2,
               command=lambda: open_popup(reset_password, title="Reset Password", size="300x300")).pack(side="left", fill="x", expand=True)
-    tk.Button(footer, text="🗝 Token", font=("Segoe UI",10), bg="#2b2b2b", fg="white", relief="flat", height=2,
+
+    tk.Button(footer, text="🗝 Token", font=("Segoe UI", 10),
+              bg="#2b2b2b", fg="white", relief="flat", height=2,
               command=lambda: open_popup(lambda p: build_github_credential_screen(p, otp_entries), title="GitHub Token")).pack(side="left", fill="x", expand=True)
-    tk.Button(footer, text="⚙️ Crypto", font=("Segoe UI",10), bg="#2b2b2b", fg="white", relief="flat", height=2,
+
+    tk.Button(footer, text="⚙️ Crypto", font=("Segoe UI", 10),
+              bg="#2b2b2b", fg="white", relief="flat", height=2,
               command=lambda: open_popup(open_crypto_screen, title="Crypto Utility", size="370x300")).pack(side="left", fill="x", expand=True)
 
-    if otp_entries: update_totps(root)
+    if otp_entries:
+        update_totps(root)
 
 def update_totps(root):
     for entry in frames:
