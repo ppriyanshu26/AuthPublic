@@ -39,11 +39,27 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 import base64
+import keyring
+import getpass
 
 # ------------------- Base Directory -------------------
-BASE_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
-CACHE_FILE = os.path.join(BASE_DIR, "cache.txt")
-ENCODED_FILE = os.path.join(BASE_DIR, "encoded.txt")
+
+if sys.platform == "win32":
+    BASE_APP_DIR = os.getenv("APPDATA")  # Windows
+elif sys.platform == "darwin":
+    BASE_APP_DIR = os.path.expanduser("~/Library/Application Support")  # macOS
+elif sys.platform.startswith("linux"):
+    BASE_APP_DIR = os.path.expanduser("~/.local/share")  # Linux
+else:
+    BASE_APP_DIR = os.getcwd()  # Fallback for unknown platforms
+
+# Create a folder for your app
+APP_FOLDER = os.path.join(BASE_APP_DIR, "TOTP Authenticator")
+os.makedirs(APP_FOLDER, exist_ok=True)
+
+# File paths
+CACHE_FILE = os.path.join(APP_FOLDER, "cache.txt")
+ENCODED_FILE = os.path.join(APP_FOLDER, "encoded.txt")
 
 frames = []
 toast_label = None
@@ -51,6 +67,8 @@ canvas = None
 inner_frame = None
 decrypt_key = None
 popup_window = None
+SERVICE_NAME = "TOTP Authenticator"
+USERNAME = getpass.getuser()
 
 # ------------------- Utility -------------------
 def load_otps_from_decrypted(decrypted_otps):
@@ -104,10 +122,11 @@ def set_cache_value(key, value):
         if not found: f.write(f"{key}={value}\n")
 
 def save_password(password):
-    set_cache_value("APP_PASSWORD", hashlib.sha256(password.encode()).hexdigest())
+    hashed = hashlib.sha256(password.encode()).hexdigest()
+    keyring.set_password(SERVICE_NAME, USERNAME, hashed)
 
 def get_stored_password():
-    return get_cache_value("APP_PASSWORD")
+    return keyring.get_password(SERVICE_NAME, USERNAME)
 
 def lock_app(root, otp_entries):
     for widget in root.winfo_children():
@@ -495,7 +514,7 @@ def build_lock_screen(root, otp_entries):
 # ------------------- Main -------------------
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("TOTP Authenticator v1.1.1")
+    root.title("TOTP Authenticator v2.0.0")
     root.geometry("420x500")
     root.configure(bg="#1e1e1e")
     root.resizable(False, False)
