@@ -180,6 +180,13 @@ To safeguard your credentials and access them from anywhere:
 
 ---
 
+## 🎥 Project Walkthrough Video
+
+Watch a full walkthrough of the project here:<br>
+<a href="https://drive.google.com/file/d/1ebZfiX-PvqSI_XzsmAcSP-zig7Pa5hsd/view?usp=sharing" target="_blank"><b>▶️ Google Drive Video Walkthrough</b></a>
+
+---
+
 ## 🤝 Contributing
 
 Contributions, bug reports, and suggestions are welcome! Please open an issue or pull request on [GitHub](https://github.com/ppriyanshu26/AuthPublic).
