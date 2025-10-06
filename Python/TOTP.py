@@ -1,5 +1,5 @@
 """
-TOTP Authenticator v1.1.1
+TOTP Authenticator v2.0.0
 -------------------------
 A secure desktop application (Tkinter-based) for managing Time-based One-Time Passwords (TOTPs).
 
