@@ -14,7 +14,7 @@
 
 ## ✨ Features
 
-### � TOTP Authenticator
+### 🔐 TOTP Authenticator
 - AES-256 encrypted TOTP manager
 - Password lock (stored in OS credentials manager)
 - Live OTP list with copy & countdown ⏳
